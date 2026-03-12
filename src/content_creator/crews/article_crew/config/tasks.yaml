@@ -4,24 +4,35 @@ deep_research:
     Topic Summary: {topic_summary}
     Target Skill Level: {skill_level}
 
-    Gather comprehensive information including:
-    1. Core concepts and definitions
-    2. Key research papers and breakthroughs
-    3. Real-world applications and use cases
-    4. Available tutorials and learning resources
-    5. Code implementations and examples
-    6. Common misconceptions to avoid
+    Steps:
+    1. Use "Search for specific topic information" tool to find tutorials and articles about {topic_title}
+    2. Use "Read web page content" tool to read the full content of the most relevant URLs
+    3. Gather comprehensive information including:
+       - Core concepts and definitions
+       - Key research papers and breakthroughs
+       - Real-world applications and use cases
+       - Code implementations and examples
+       - Common misconceptions to avoid
 
     Focus on depth appropriate for {skill_level} level while ensuring
     foundational concepts are covered.
   expected_output: >
-    A comprehensive research report covering:
-    - Core concepts explained clearly
-    - Key papers/breakthroughs with URLs
-    - Real-world applications
-    - Learning resources
-    - Code examples found
-    - Key terminology with definitions
+    A structured research report with these exact sections:
+
+    ## Core Concepts
+    [Clear explanations of the main concepts]
+
+    ## Key Papers and Breakthroughs
+    [Important research with URLs]
+
+    ## Real-World Applications
+    [How this is used in industry]
+
+    ## Code Examples Found
+    [Any code snippets or implementations discovered]
+
+    ## Key Terminology
+    [Term: Definition format for important terms]
   agent: research_specialist
 
 create_outline:
@@ -60,10 +71,13 @@ create_outline:
     - Open research questions and opportunities
     - Citations and further reading
 
-    Include specific bullet points under each section.
+    Include 3-5 specific bullet points under each section describing what to cover.
   expected_output: >
-    A detailed outline with all section headers and bullet points
-    for content to be included in each section.
+    A detailed outline with:
+    - Section headers using ## markdown format
+    - 3-5 bullet points under each section
+    - Estimated word count per section
+    - Notes on what code examples to include where
   agent: content_planner
   context:
     - deep_research
@@ -73,24 +87,44 @@ write_article:
     Write the complete Medium-style article for: {topic_title}
     Skill Level: {skill_level}
 
-    Follow the outline provided and write engaging content:
-    - Use a conversational but informative tone
-    - Include relevant examples and analogies
-    - Add code blocks with clear explanations
-    - Use markdown formatting (headers, lists, bold, etc.)
-    - Aim for 1500-2500 words depending on skill level
-    - Make sure each section flows logically
-    - End with actionable takeaways
+    Your article MUST follow this exact structure:
 
-    The article should feel like a high-quality Medium post that
-    readers would want to bookmark and share.
+    # [Engaging Title for {topic_title}]
+
+    **TL;DR:** [2-3 sentences summarizing the key takeaway]
+
+    ## [Hook Section - start with a compelling story, question, or scenario. 100-150 words]
+
+    ## What Is {topic_title}?
+    [Clear explanation adapted to {skill_level} level. 200-300 words]
+
+    ## Why It Matters
+    [Real-world impact and applications. 150-200 words]
+
+    ## How It Works
+    [Technical explanation at {skill_level} level with code snippets. 300-400 words]
+
+    ## Getting Started / Implementation
+    [Practical step-by-step guide with code. 200-300 words]
+
+    ## Key Takeaways
+    [Bulleted list of 3-5 main points]
+
+    ## Further Reading
+    [3-5 links to resources with brief descriptions]
+
+    Writing rules:
+    - Short paragraphs (2-3 sentences max)
+    - Use **bold** for key terms when first introduced
+    - Use `code font` for technical terms and commands
+    - Use > blockquotes for important insights
+    - Include ```python code blocks with comments
+    - Total: 1500-2500 words
+    - DO NOT start with "In this article" or "Let's dive in"
   expected_output: >
-    A complete markdown-formatted article with:
-    - Title
-    - All sections from outline
-    - Code examples
-    - Links to resources
-    - Proper formatting
+    The COMPLETE article in markdown format, ready to be saved as a file.
+    Must include: title, TL;DR, all sections listed above, code examples,
+    and proper markdown formatting throughout.
   agent: writer
   context:
     - create_outline
@@ -102,17 +136,18 @@ edit_article:
 
     Check for:
     1. Technical accuracy - verify facts and concepts
-    2. Clarity - ensure explanations are clear
+    2. Clarity - ensure explanations are clear for {skill_level} readers
     3. Flow - check transitions between sections
-    4. Style - ensure Medium-appropriate tone
-    5. Reading level - appropriate for {skill_level}
+    4. Style - conversational Medium tone, short paragraphs
+    5. Formatting - proper markdown, code blocks with language tags
     6. Grammar and spelling
 
-    Make necessary improvements while preserving the author's voice.
-    Add suggestions if sections need expansion.
+    CRITICAL: Your output must be the COMPLETE edited article with all improvements applied.
+    Do NOT output just a list of suggestions or review notes.
+    Your output IS the final article that will be saved directly to a file.
   expected_output: >
-    The polished article with improvements made.
-    A brief summary of changes made.
+    The COMPLETE polished article in markdown format with all edits applied.
+    This output goes directly to a file, so it must be the full article text.
   agent: editor
   context:
     - write_article
@@ -122,27 +157,46 @@ create_project:
     Create a practical mini-project for: {topic_title}
     Skill Level: {skill_level}
 
-    Requirements:
+    Size requirements:
     - BEGINNER: Complete working example (~50 lines), copy-paste ready
     - INTERMEDIATE: Extensible template with exercises (~100-150 lines)
     - EXPERT: Full implementation with tests and documentation (~200+ lines)
 
-    Include:
-    1. Project description and goals
-    2. Required dependencies (requirements.txt format)
-    3. Step-by-step implementation
-    4. Well-commented code
-    5. Instructions to run
-    6. Expected output
-    7. Extension ideas
+    Your output MUST include ALL of these sections:
 
-    The project should reinforce key concepts from the article.
+    ## Mini-Project: [Project Name]
+
+    ### Description
+    [What this project does and what you'll learn]
+
+    ### Requirements
+    ```
+    [package1]==x.x.x
+    [package2]==x.x.x
+    ```
+
+    ### The Code
+    ```python
+    # [Full, runnable Python code with comments on every significant block]
+    ```
+
+    ### How to Run
+    [Step-by-step instructions]
+
+    ### Expected Output
+    [What the user should see when they run it]
+
+    ### Extension Ideas
+    [3-5 ideas for how to extend this project]
+
+    RULES:
+    - All code must be copy-paste runnable with ALL imports included
+    - Do NOT use placeholder comments like "# your code here"
+    - Include error handling for common issues
+    - The project must directly relate to the article topic
   expected_output: >
-    A complete project including:
-    - README section describing the project
-    - Python code file(s)
-    - requirements.txt content
-    - Step-by-step instructions
+    A complete, self-contained project document with all sections listed above.
+    The code must be runnable as-is after installing the listed requirements.
   agent: code_specialist
   context:
     - edit_article

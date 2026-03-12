@@ -9,14 +9,16 @@ Commands:
     review                - Review pending articles
     publish               - Prepare approved articles for publishing
     full-workflow         - Run complete workflow with interactive checkpoints
+    add-topic             - Create article from a custom topic (CLI args)
 """
 
 import sys
-import json
+import argparse
 from pathlib import Path
-from datetime import datetime
 
-from content_creator.flows import ResearchFlow, ArticleFlow, PublishFlow
+from content_creator.flows import (
+    ResearchFlow, ArticleFlow, PublishFlow, ContentCreationFlow
+)
 from content_creator.database.topic_db import TopicDatabase
 
 
@@ -126,14 +128,12 @@ def create_article(topic_data, skill_level):
         # Show the article for review
         print("\n--- ARTICLE PREVIEW ---\n")
 
-        # Read and display the article
         project_root = Path(__file__).parent.parent.parent
         article_file = project_root / "articles" / f"draft_{topic_data.get('title', 'article').replace(' ', '_')[:30]}.md"
 
         if article_file.exists():
             with open(article_file, 'r') as f:
                 content = f.read()
-                # Show first 2000 chars
                 print(content[:2000] + "...\n" if len(content) > 2000 else content)
 
         print("\n--- END OF PREVIEW ---")
@@ -153,7 +153,6 @@ def review_article():
         print("No articles directory found.")
         return
 
-    # Find draft articles
     draft_files = list(articles_dir.glob("draft_*.md"))
 
     if not draft_files:
@@ -193,21 +192,17 @@ def review_article():
         return
 
     if decision == 1:
-        # Approve
         print("\nArticle APPROVED!")
         print("Run 'publish' to prepare it for Medium.")
         return content
 
     elif decision == 2:
-        # Needs revisions - delete
         selected_file.unlink()
         print("\nArticle marked for revisions and deleted.")
         print("Run 'create-article' again after making changes.")
 
     else:
-        # Reject - delete
         selected_file.unlink()
-        # Also delete project file if exists
         project_file = articles_dir / selected_file.name.replace("draft_", "project_")
         if project_file.exists():
             project_file.unlink()
@@ -221,7 +216,6 @@ def publish_article():
     project_root = Path(__file__).parent.parent.parent
     articles_dir = project_root / "articles"
 
-    # Find approved articles (not containing 'draft_' in the name we're looking for)
     article_files = list(articles_dir.glob("draft_*.md"))
 
     if not article_files:
@@ -243,17 +237,14 @@ def publish_article():
     with open(selected_file, 'r') as f:
         article_content = f.read()
 
-    # Get topic info (simplified)
     topic = {
         'title': selected_file.stem.replace('draft_', '').replace('_', ' '),
         'summary': 'AI/ML article',
         'category': 'AI/ML'
     }
 
-    # Assume intermediate if not specified
     skill_level = 'intermediate'
 
-    # Run publish flow
     flow = PublishFlow(article_content=article_content, topic=topic, skill_level=skill_level)
     result = flow.kickoff()
 
@@ -262,14 +253,12 @@ def publish_article():
         print("PUBLISHING PREPARATION COMPLETE!")
         print("="*70)
 
-        # Show files created
         outputs_dir = project_root / "outputs"
 
         print("\nFiles created:")
         print(f"  - {outputs_dir / 'article_medium_ready.md'}")
         print(f"  - {outputs_dir / 'linkedin_posts.txt'}")
 
-        # Show LinkedIn posts
         linkedin_file = outputs_dir / 'linkedin_posts.txt'
         if linkedin_file.exists():
             print("\n" + "-"*70)
@@ -280,87 +269,62 @@ def publish_article():
 
 
 def full_workflow():
-    """Run complete workflow with checkpoints"""
-    print_header("FULL WORKFLOW MODE")
-    print("This will guide you through the entire process with checkpoints.\n")
+    """Run complete workflow using the unified ContentCreationFlow."""
+    flow = ContentCreationFlow()
+    flow.state.mode = "auto"
 
-    # Step 1: Research
-    print("\n" + "="*70)
-    print("STEP 1: RESEARCH")
-    print("="*70)
+    try:
+        flow.kickoff()
+    except KeyboardInterrupt:
+        print("\n\nWorkflow interrupted. Progress has been saved.")
 
-    db = TopicDatabase()
-    existing_topics = db.get_pending_topics()
 
-    if existing_topics:
-        print(f"\nFound {len(existing_topics)} existing topic(s) in database.")
-        print("Do you want to:")
-        print_menu(["Use existing topics",
-                    "Run new research to find more topics"], "Option")
+def add_custom_topic():
+    """Create an article from a custom user-provided topic.
 
-        choice = get_user_choice(2)
-        if choice is None:
-            return
+    Usage: add-topic --title "Topic Name" [--summary "Description"] [--level intermediate]
+    """
+    parser = argparse.ArgumentParser(
+        description="Create an article from a custom topic",
+        prog="add-topic"
+    )
+    parser.add_argument(
+        "--title", "-t",
+        required=True,
+        help="The topic title (e.g., 'RAG Pipelines with LangChain')"
+    )
+    parser.add_argument(
+        "--summary", "-s",
+        default=None,
+        help="Brief description of the topic (optional, defaults to title)"
+    )
+    parser.add_argument(
+        "--level", "-l",
+        choices=["beginner", "intermediate", "expert"],
+        default="intermediate",
+        help="Skill level for the article (default: intermediate)"
+    )
 
-        if choice == 2:
-            run_research()
-    else:
-        print("\nNo existing topics found. Running research...")
-        run_research()
+    # Parse only the args after the command name
+    args = parser.parse_args(sys.argv[1:])
 
-    # Checkpoint 1: Topic Selection
-    print("\n" + "="*70)
-    print("CHECKPOINT 1: TOPIC SELECTION")
-    print("="*70)
+    print_header("CUSTOM TOPIC MODE")
+    print(f"Topic: {args.title}")
+    print(f"Level: {args.level}")
+    if args.summary:
+        print(f"Summary: {args.summary}")
+    print()
 
-    topic_data, skill_level = display_topics_and_select()
-    if topic_data is None:
-        print("\nWorkflow cancelled.")
-        return
+    flow = ContentCreationFlow()
+    flow.state.mode = "custom"
+    flow.state.custom_topic = args.title
+    flow.state.custom_summary = args.summary
+    flow.state.skill_level = args.level
 
-    print(f"\nSelected: {topic_data['title']}")
-    print(f"Skill Level: {skill_level}")
-
-    # Step 2: Article Creation
-    print("\n" + "="*70)
-    print("STEP 2: ARTICLE CREATION")
-    print("="*70)
-
-    proceed = input("\nProceed with article creation? (y/n): ").strip().lower()
-    if proceed != 'y':
-        print("\nWorkflow paused. Run 'create-article' later to continue.")
-        return
-
-    create_article(topic_data, skill_level)
-
-    # Checkpoint 2: Article Review
-    print("\n" + "="*70)
-    print("CHECKPOINT 2: ARTICLE REVIEW")
-    print("="*70)
-
-    proceed = input("\nReview the article now? (y/n): ").strip().lower()
-    if proceed != 'y':
-        print("\nWorkflow paused. Run 'review' later to continue.")
-        return
-
-    content = review_article()
-
-    if content:
-        # Step 3: Publishing
-        print("\n" + "="*70)
-        print("STEP 3: PUBLISHING PREPARATION")
-        print("="*70)
-
-        proceed = input("\nProceed with publishing preparation? (y/n): ").strip().lower()
-        if proceed != 'y':
-            print("\nWorkflow paused. Run 'publish' later to continue.")
-            return
-
-        publish_article()
-
-    print("\n" + "="*70)
-    print("WORKFLOW COMPLETE!")
-    print("="*70)
+    try:
+        flow.kickoff()
+    except KeyboardInterrupt:
+        print("\n\nWorkflow interrupted. Progress has been saved.")
 
 
 def main():
@@ -371,11 +335,15 @@ def main():
         print("Usage: crewai run <command>")
         print("\nCommands:")
         print("  research         - Discover new AI/ML topics")
-        print("  select-topic   - Browse and select a topic")
+        print("  select-topic     - Browse and select a topic")
         print("  create-article   - Create article from selected topic")
         print("  review           - Review pending articles")
         print("  publish          - Prepare approved articles for Medium")
         print("  full-workflow    - Run complete workflow with checkpoints")
+        print("  add-topic        - Create article from custom topic")
+        print()
+        print("Custom topic example:")
+        print('  add-topic --title "RAG Pipelines" --level intermediate')
         return
 
     command = sys.argv[1]
@@ -387,7 +355,8 @@ def main():
         'review': review_article,
         'publish': publish_article,
         'full-workflow': full_workflow,
-        'kickoff': full_workflow,  # Default
+        'kickoff': full_workflow,
+        'add-topic': add_custom_topic,
     }
 
     if command in commands:
@@ -412,7 +381,6 @@ def kickoff():
 def plot():
     """Entry point for 'plot' command"""
     print("Generating flow visualization...")
-    # This would generate a flow diagram if needed
     print("Visualization saved to flow_plot.html")
 
 

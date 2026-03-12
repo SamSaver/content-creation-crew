@@ -12,6 +12,7 @@ from .storage_tools import (
     update_topic_status,
     get_all_topics
 )
+from .web_tools import read_web_content
 
 __all__ = [
     'search_arxiv',
@@ -23,5 +24,6 @@ __all__ = [
     'get_pending_topics',
     'get_topic_by_id',
     'update_topic_status',
-    'get_all_topics'
+    'get_all_topics',
+    'read_web_content'
 ]

@@ -6,30 +6,27 @@ from crewai.tools import tool
 
 
 @tool("Search arXiv for papers")
-def search_arxiv(query: str, max_results: int = 10) -> str:
+def search_arxiv(query: str, max_results: int = 5) -> str:
     """
     Search arXiv for papers related to AI/ML topics.
 
     Args:
         query: Search query string
-        max_results: Maximum number of results to return (default 10)
+        max_results: Maximum number of results to return (default 5)
 
     Returns:
         JSON string containing paper titles, abstracts, authors, and URLs
     """
     try:
-        # Encode query for URL
         encoded_query = urllib.parse.quote(query)
         url = f"http://export.arxiv.org/api/query?search_query=all:{encoded_query}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending"
 
         with urllib.request.urlopen(url, timeout=30) as response:
             data = response.read().decode('utf-8')
 
-        # Simple XML parsing to extract entries
         import xml.etree.ElementTree as ET
         root = ET.fromstring(data)
 
-        # Namespace handling
         ns = {'atom': 'http://www.w3.org/2005/Atom'}
 
         papers = []
@@ -55,43 +52,32 @@ def search_arxiv(query: str, max_results: int = 10) -> str:
 @tool("Search AI news and blogs")
 def search_ai_news(query: str) -> str:
     """
-    Search for AI news and blog posts using web search.
+    Search for AI news and blog posts using DuckDuckGo.
 
     Args:
         query: Search query string
 
     Returns:
-        JSON string containing search results
+        JSON string containing search results with title, URL, and snippet
     """
     try:
-        # Use DuckDuckGo search
-        encoded_query = urllib.parse.quote(f"{query} AI machine learning news")
-        url = f"https://html.duckduckgo.com/html/?q={encoded_query}"
+        from duckduckgo_search import DDGS
 
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
+        results = DDGS().text(
+            keywords=f"{query} AI machine learning news",
+            max_results=8
+        )
 
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=30) as response:
-            html = response.read().decode('utf-8')
+        formatted = []
+        for r in results:
+            formatted.append({
+                'title': r.get('title', ''),
+                'url': r.get('href', ''),
+                'snippet': r.get('body', ''),
+                'source': 'Web Search'
+            })
 
-        # Simple parsing of results
-        results = []
-        # Look for result links and titles
-        import re
-        result_blocks = re.findall(r'<a rel="nofollow" class="result__a"[^>]*>(.*?)</a>', html)
-
-        for i, block in enumerate(result_blocks[:5]):
-            # Clean HTML tags
-            clean_text = re.sub(r'<[^>]+>', '', block)
-            if clean_text:
-                results.append({
-                    'title': clean_text,
-                    'source': 'Web Search'
-                })
-
-        return json.dumps(results, indent=2)
+        return json.dumps(formatted, indent=2)
     except Exception as e:
         return json.dumps({"error": f"Failed to search: {str(e)}", "results": []})
 
@@ -99,40 +85,42 @@ def search_ai_news(query: str) -> str:
 @tool("Get GitHub trending repositories")
 def search_github_trending(language: str = "python", period: str = "daily") -> str:
     """
-    Get trending GitHub repositories related to AI/ML.
+    Get trending GitHub repositories related to AI/ML using the GitHub Search API.
 
     Args:
         language: Programming language filter (default: python)
         period: Time period - daily, weekly, or monthly (default: daily)
 
     Returns:
-        JSON string containing trending repositories
+        JSON string containing trending repositories with name, description, stars, and URL
     """
     try:
-        url = f"https://github.com/trending/{language}?since={period}"
+        from datetime import datetime, timedelta
+
+        days_map = {"daily": 1, "weekly": 7, "monthly": 30}
+        days = days_map.get(period, 7)
+        since_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
+
+        url = f"https://api.github.com/search/repositories?q=language:{language}+topic:machine-learning+created:>{since_date}&sort=stars&order=desc&per_page=10"
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'AI-Content-Creator/1.0'
         }
 
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=30) as response:
-            html = response.read().decode('utf-8')
+            data = json.loads(response.read().decode('utf-8'))
 
-        import re
         repos = []
-
-        # Parse trending repos
-        repo_matches = re.findall(r'<h2[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>\s*([^<]+)', html)
-
-        for match in repo_matches[:10]:
-            repo_path = match[0].strip()
-            repo_name = match[1].strip().replace('\n', '').replace(' ', '')
-            if repo_path and repo_name:
-                repos.append({
-                    'name': repo_name,
-                    'url': f"https://github.com{repo_path}",
-                    'description': f"Trending {language} repository"
-                })
+        for item in data.get('items', [])[:10]:
+            repos.append({
+                'name': item.get('full_name', ''),
+                'url': item.get('html_url', ''),
+                'description': item.get('description', 'No description') or 'No description',
+                'stars': item.get('stargazers_count', 0),
+                'language': item.get('language', language),
+                'topics': item.get('topics', [])[:5]
+            })
 
         return json.dumps(repos, indent=2)
     except Exception as e:
@@ -148,35 +136,25 @@ def search_topic_info(topic: str) -> str:
         topic: Topic to search for
 
     Returns:
-        String containing search results with explanations and resources
+        String containing search results with titles, snippets, and URLs
     """
     try:
-        # Search for tutorials and explanations
-        encoded_query = urllib.parse.quote(f"{topic} tutorial explanation machine learning")
-        url = f"https://html.duckduckgo.com/html/?q={encoded_query}"
+        from duckduckgo_search import DDGS
 
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
+        results = DDGS().text(
+            keywords=f"{topic} tutorial explanation machine learning",
+            max_results=8
+        )
 
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=30) as response:
-            html = response.read().decode('utf-8')
-
-        import re
-        results = []
-
-        # Extract titles and snippets
-        title_matches = re.findall(r'<a rel="nofollow" class="result__a"[^>]*>(.*?)</a>', html)
-        snippet_matches = re.findall(r'<a class="result__snippet"[^>]*>(.*?)</a>', html)
-
-        for i in range(min(len(title_matches), len(snippet_matches), 5)):
-            title = re.sub(r'<[^>]+>', '', title_matches[i])
-            snippet = re.sub(r'<[^>]+>', '', snippet_matches[i])
+        formatted = []
+        for r in results:
+            title = r.get('title', '')
+            snippet = r.get('body', '')
+            url = r.get('href', '')
             if title and snippet:
-                results.append(f"{title}: {snippet}")
+                formatted.append(f"**{title}**\n{snippet}\nURL: {url}")
 
-        return "\n\n".join(results) if results else "No results found"
+        return "\n\n---\n\n".join(formatted) if formatted else "No results found for this topic."
     except Exception as e:
         return f"Error searching for topic: {str(e)}"
 
@@ -184,28 +162,61 @@ def search_topic_info(topic: str) -> str:
 @tool("Get current trending AI topics")
 def get_trending_ai_topics() -> str:
     """
-    Get a list of currently trending AI/ML topics.
+    Get a list of currently trending AI/ML topics by searching real-time news and web sources.
 
     Returns:
-        JSON string with trending topics and their categories
+        JSON string with trending topics, their categories, and source URLs
     """
-    # Curated list of high-impact AI topics that are currently relevant
-    trending = [
-        {"name": "Large Language Models (LLMs)", "category": "AI/ML"},
-        {"name": "Retrieval-Augmented Generation (RAG)", "category": "AI/ML"},
-        {"name": "Multimodal AI", "category": "AI/ML"},
-        {"name": "Agentic AI Systems", "category": "Agentic Systems"},
-        {"name": "Mixture of Experts (MoE)", "category": "Deep Learning"},
-        {"name": "Test-Time Compute Scaling", "category": "AI/ML"},
-        {"name": "Neural Architecture Search", "category": "Deep Learning"},
-        {"name": "Vision Transformers", "category": "Deep Learning"},
-        {"name": "Diffusion Models", "category": "Deep Learning"},
-        {"name": "Reinforcement Learning from Human Feedback", "category": "RL"},
-        {"name": "Quantization and Model Compression", "category": "ML Engineering"},
-        {"name": "Federated Learning", "category": "ML"},
-        {"name": "Graph Neural Networks", "category": "Deep Learning"},
-        {"name": "Neural Radiance Fields (NeRF)", "category": "Computer Vision"},
-        {"name": "Constitutional AI", "category": "AI Safety"}
-    ]
+    try:
+        from duckduckgo_search import DDGS
 
-    return json.dumps(trending, indent=2)
+        trending = []
+        seen_titles = set()
+
+        # Search recent AI/ML news
+        news_results = DDGS().news(
+            keywords="artificial intelligence machine learning breakthrough",
+            max_results=15
+        )
+        for r in news_results:
+            title = r.get('title', '')
+            if title and title.lower() not in seen_titles:
+                seen_titles.add(title.lower())
+                trending.append({
+                    'name': title,
+                    'category': 'AI/ML',
+                    'url': r.get('url', ''),
+                    'snippet': r.get('body', '')[:200],
+                    'source': r.get('source', 'News')
+                })
+
+        # Also search for trending topics
+        text_results = DDGS().text(
+            keywords="trending AI ML topics tools 2025 2026",
+            max_results=10
+        )
+        for r in text_results:
+            title = r.get('title', '')
+            if title and title.lower() not in seen_titles:
+                seen_titles.add(title.lower())
+                trending.append({
+                    'name': title,
+                    'category': 'AI/ML',
+                    'url': r.get('href', ''),
+                    'snippet': r.get('body', '')[:200],
+                    'source': 'Web'
+                })
+
+        if trending:
+            return json.dumps(trending[:20], indent=2)
+
+        # Minimal fallback only if all searches fail
+        fallback = [
+            {"name": "Large Language Models (LLMs)", "category": "AI/ML", "url": "", "snippet": "Fallback: live search unavailable", "source": "static_fallback"},
+            {"name": "Retrieval-Augmented Generation (RAG)", "category": "AI/ML", "url": "", "snippet": "Fallback: live search unavailable", "source": "static_fallback"},
+            {"name": "Agentic AI Systems", "category": "Agentic Systems", "url": "", "snippet": "Fallback: live search unavailable", "source": "static_fallback"},
+        ]
+        return json.dumps(fallback, indent=2)
+
+    except Exception as e:
+        return json.dumps({"error": f"Failed to get trending topics: {str(e)}"})

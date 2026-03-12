@@ -3,7 +3,17 @@
     "allow": [
       "Bash(find /home/samarth/learning/frameworks/crewai/content_creator -type f -name \"*.py\" -o -name \"*.yaml\" -o -name \"*.toml\" -o -name \"*.md\" 2>/dev/null | head -30)",
       "Bash(python -c \"import content_creator.main\" 2>&1 || echo \"Import check complete\")",
-      "Bash(tree -L 4 -I '__pycache__|*.pyc|.git' /home/samarth/learning/frameworks/crewai/content_creator 2>/dev/null || find /home/samarth/learning/frameworks/crewai/content_creator -type f -name \"*.py\" -o -name \"*.yaml\" -o -name \"*.md\" | head -50)"
+      "Bash(tree -L 4 -I '__pycache__|*.pyc|.git' /home/samarth/learning/frameworks/crewai/content_creator 2>/dev/null || find /home/samarth/learning/frameworks/crewai/content_creator -type f -name \"*.py\" -o -name \"*.yaml\" -o -name \"*.md\" | head -50)",
+      "Bash(find /Users/samarth.singh.pawar/Desktop/skill-dev/content-creation-crew -type d -name *.venv -o -name venv -o -name .env)",
+      "Bash(python3 -c \"import sys; print\\(''''\\\\n''''.join\\(sys.path\\)\\)\")",
+      "Bash(python3 -c \"import crewai; print\\(crewai.__file__\\)\")",
+      "Bash(find /Users/samarth.singh.pawar/Desktop/skill-dev/content-creation-crew -name .env* -o -name *.env)",
+      "Bash(python3 -c \"import pkg_resources; print\\(pkg_resources.get_distribution\\(''crewai''\\).version\\)\")",
+      "Bash(python3:*)",
+      "Bash(find /Users/samarth.singh.pawar/Desktop/skill-dev/content-creation-crew -type f -name *.md -o -name *.txt)",
+      "Bash(find /Users/samarth.singh.pawar/Desktop/skill-dev/content-creation-crew/.venv -path */crewai/flow* -name *.py)",
+      "Bash(find /Users/samarth.singh.pawar/Desktop/skill-dev/content-creation-crew/.venv -path */crewai/flow*)",
+      "Bash(ls /Users/samarth.singh.pawar/Desktop/skill-dev/content-creation-crew/.venv/lib/python*/site-packages/crewai/)"
     ]
   }
 }

@@ -1,15 +1,92 @@
 # AI Content Creator
 
-A CrewAI-powered workflow that continuously researches the latest high-impact AI/ML topics, generates Medium-style educational articles, and prepares LinkedIn promotional content.
+A CrewAI-powered workflow that researches trending AI/ML topics, generates Medium-style educational articles with hands-on projects, and prepares LinkedIn promotional content. Runs entirely locally using Ollama open-source LLMs.
 
 ## Features
 
-- **Continuous Research**: Automatically discovers trending AI/ML/DL topics from arXiv, news sources, and GitHub
-- **Interactive Topic Selection**: Browse and select from curated high-impact topics
+- **Real-Time Research**: Discovers trending AI/ML topics from arXiv, DuckDuckGo news, and GitHub
+- **Custom Topics**: Provide your own topic via CLI instead of using auto-discovery
 - **Skill-Level Adaptation**: Generates articles for Beginner, Intermediate, or Expert audiences
-- **Complete Article Generation**: Research → Outline → Writing → Editing → Code Projects
-- **LinkedIn Integration**: Creates promotional posts to share on LinkedIn
-- **Checkpoint System**: Interactive workflow pauses for user approval at key stages
+- **Complete Article Pipeline**: Research -> Outline -> Writing -> Editing -> Code Projects
+- **LinkedIn Integration**: Creates 3 promotional post variations (hook/story/question-focused)
+- **Unified Flow Orchestration**: Single CrewAI flow manages the entire pipeline with checkpoints
+- **100% Local**: No paid APIs required - uses Ollama for inference
+
+## Prerequisites
+
+- Python >=3.10, <3.14
+- [Ollama](https://ollama.com) installed and running
+- 16GB system RAM recommended (8GB VRAM minimum)
+
+### Install Ollama and pull models
+
+```bash
+# Install Ollama
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Pull the required models
+ollama pull llama3.1:8b
+ollama pull qwen2.5-coder:7b
+
+# Start Ollama server (if not auto-started)
+ollama serve
+```
+
+## Installation
+
+```bash
+cd content-creation-crew
+
+# Install with uv (recommended)
+uv sync
+
+# Or with pip
+pip install -e .
+```
+
+No API keys or `.env` file needed - everything runs locally via Ollama.
+
+## Usage
+
+### Full Workflow (Recommended)
+
+Run the complete pipeline with interactive checkpoints:
+
+```bash
+crewai run full-workflow
+```
+
+This will:
+1. Research and discover trending AI/ML topics
+2. Present topics for you to select + choose skill level
+3. Generate a complete article with code project
+4. Pause for your review and approval
+5. Prepare Medium-ready content + LinkedIn posts
+
+### Custom Topic
+
+Skip research and write about a topic of your choice:
+
+```bash
+add-topic --title "RAG Pipelines with LangChain" --level intermediate
+add-topic --title "Fine-tuning LLMs" --summary "How to fine-tune open source LLMs on custom data" --level expert
+add-topic -t "Neural Networks for Beginners" -l beginner
+```
+
+**Arguments:**
+- `--title` / `-t` (required): The topic to write about
+- `--summary` / `-s` (optional): Brief description (defaults to title)
+- `--level` / `-l` (optional): `beginner`, `intermediate`, or `expert` (default: intermediate)
+
+### Individual Commands
+
+```bash
+crewai run research        # Discover new AI/ML topics
+crewai run select-topic    # Browse and select from discovered topics
+crewai run create-article  # Select topic + create article
+crewai run review          # Review and approve/reject articles
+crewai run publish         # Prepare articles for Medium + LinkedIn
+```
 
 ## Project Structure
 
@@ -18,234 +95,112 @@ content_creator/
 ├── src/content_creator/
 │   ├── crews/
 │   │   ├── research_crew/      # Discover and curate AI topics
-│   │   ├── article_crew/       # Generate Medium articles
-│   │   └── publish_crew/       # Prepare for Medium + LinkedIn posts
+│   │   ├── article_crew/       # Generate Medium articles + code projects
+│   │   └── publish_crew/       # Prepare for Medium + LinkedIn
 │   ├── flows/
-│   │   └── __init__.py         # Flow orchestration with checkpoints
+│   │   └── __init__.py         # Flow orchestration (ContentCreationFlow)
 │   ├── tools/
-│   │   ├── search_tools.py     # arXiv, news, GitHub search
+│   │   ├── search_tools.py     # arXiv, DuckDuckGo, GitHub search
+│   │   ├── web_tools.py        # Web content reader
 │   │   └── storage_tools.py    # Database operations
 │   ├── database/
 │   │   └── topic_db.py         # SQLite topic storage
 │   └── main.py                 # CLI interface
 ├── data/                       # SQLite database
-├── articles/                   # Generated articles
-└── outputs/                  # Final publish-ready files
-```
-
-## Installation
-
-```bash
-# Clone and navigate to the project
-cd content_creator
-
-# Install dependencies
-pip install -e .
-
-# Set your OpenAI API key in .env
-echo "OPENAI_API_KEY=your_key_here" > .env
-```
-
-## Usage
-
-### Quick Start - Full Workflow
-
-Run the complete workflow with interactive checkpoints:
-
-```bash
-crewai run full-workflow
-```
-
-This will:
-1. Research and discover trending AI topics
-2. Present topics for you to select
-3. Generate an article for your chosen skill level
-4. Pause for your review and approval
-5. Prepare Medium-ready content + LinkedIn posts
-
-### Individual Commands
-
-#### 1. Research Phase
-
-Discover new AI/ML topics:
-
-```bash
-crewai run research
-```
-
-#### 2. Select and Create Article
-
-Browse topics and create an article:
-
-```bash
-crewai run select-topic
-crewai run create-article
-```
-
-#### 3. Review Article
-
-Review and approve/reject generated articles:
-
-```bash
-crewai run review
-```
-
-#### 4. Prepare for Publishing
-
-Generate Medium-ready content and LinkedIn posts:
-
-```bash
-crewai run publish
+├── articles/                   # Generated articles + code projects
+└── outputs/                    # Final Medium-ready + LinkedIn posts
 ```
 
 ## How It Works
 
-### Phase 1: Continuous Research
+### Phase 1: Research
 
-The **ResearchCrew** continuously monitors:
-- arXiv for latest papers
-- AI news and blogs
-- GitHub trending repositories
-
-Three agents work together:
-- **Trend Scout**: Discovers topics from sources
-- **Impact Analyst**: Scores topics on innovation, relevance, accessibility, buzz
-- **Topic Curator**: Compiles and saves top 10-15 topics to database
+The **ResearchCrew** discovers trending topics using real search tools:
+- **Trend Scout**: Searches arXiv papers, AI news via DuckDuckGo, and GitHub trending repos
+- **Impact Analyst**: Scores each topic on innovation, relevance, accessibility, and buzz
+- **Topic Curator**: Saves top 10-15 topics to the SQLite database
 
 ### Phase 2: Article Creation
 
-The **ArticleCrew** generates complete Medium articles:
+The **ArticleCrew** generates a complete article adapted to skill level:
+- **Research Specialist**: Deep-dives into the topic using web search and content reading
+- **Content Planner**: Creates a structured outline matched to skill level
+- **Writer**: Writes engaging Medium-style content with code examples
+- **Editor**: Reviews for accuracy, clarity, and style
+- **Code Specialist**: Creates a runnable mini-project (uses `qwen2.5-coder:7b`)
 
-Five agents collaborate:
-- **Research Specialist**: Deep dive into selected topic
-- **Content Planner**: Creates outline adapted to skill level
-- **Writer**: Writes engaging Medium-style content
-- **Editor**: Reviews for clarity, accuracy, and style
-- **Code Specialist**: Creates practical mini-project
-
-**Skill Level Adaptation:**
-
-| Level | Article Structure | Project Size |
-|-------|------------------|--------------|
+| Level | Article Style | Project Size |
+|-------|--------------|--------------|
 | Beginner | Analogies, simple explanations | ~50 lines |
 | Intermediate | Technical depth, implementation | ~100-150 lines |
 | Expert | Deep technical dive, optimizations | ~200+ lines |
 
-### Phase 3: Publishing Preparation
+### Phase 3: Publishing
 
 The **PublishCrew** prepares content for distribution:
+- **SEO Optimizer**: Creates optimized titles, tags, and TL;DR
+- **Formatter**: Formats article for Medium compatibility
+- **LinkedIn Creator**: Generates 3 post variations (hook/story/question-focused)
 
-Three agents:
-- **SEO Optimizer**: Creates titles, tags, TL;DR
-- **Formatter**: Formats for Medium compatibility
-- **LinkedIn Creator**: Generates 3 promotional post variations:
-  - Hook-focused: Attention-grabbing
-  - Story-focused: Personal angle
-  - Question-focused: Discussion-sparking
+## Output Files
 
-## Example Output
+| File | Location | Description |
+|------|----------|-------------|
+| Article draft | `articles/draft_{topic}.md` | Full article in markdown |
+| Code project | `articles/project_{topic}.md` | Runnable mini-project |
+| Medium-ready | `outputs/article_medium_ready.md` | Formatted for Medium import |
+| LinkedIn posts | `outputs/linkedin_posts.txt` | 3 ready-to-copy posts |
 
-### Article Structure
+## LLM Models Used
 
-```markdown
-# [Article Title]
+| Model | Used By | Purpose |
+|-------|---------|---------|
+| `ollama/llama3.1:8b` | All agents except code | General writing, research, editing |
+| `ollama/qwen2.5-coder:7b` | Code Specialist | Code generation for mini-projects |
 
-**TL;DR:** [2-3 sentence summary]
+### Upgrade Recommendations
 
-## [Engaging Hook]
+If you want better quality output while staying within 8GB VRAM:
 
-## What Is [Topic]?
+- **`llama3.3:latest`**: Drop-in replacement for llama3.1:8b with better instruction following. Change `llm: ollama/llama3.1:8b` to `llm: ollama/llama3.3:latest` in the agent YAML files.
+- **`qwen2.5:7b`**: Good at structured JSON output - useful for research/curator agents that need to produce formatted data.
+- **`gemma2:9b`**: Strong at writing tasks - good candidate for the writer and linkedin_creator agents (may need quantization for 8GB VRAM).
 
-## Why It Matters
-
-## The Fundamentals
-
-## Getting Started
-
-## Mini-Project: [Project Name]
-
-### Prerequisites
-### Step-by-Step Guide
-### The Code
-### Expected Output
-### Extension Ideas
-
-## Conclusion
-
-## Further Reading
-```
-
-### LinkedIn Post Example
-
-```
-Just published a deep dive on Mixture of Experts (MoE) architectures! 🚀
-
-These sparse architectures are changing how we scale LLMs - enabling models
-with billions of parameters while keeping inference costs manageable.
-
-I break down:
-→ How MoE works (with intuitive analogies)
-→ Real-world applications in GPT-4 and beyond
-→ A hands-on implementation you can run in 10 minutes
-
-If you're looking to understand the architecture behind some of today's
-most powerful models, check it out 👇
-
-[LINK]
-
-#MachineLearning #AI #DeepLearning #LLMs #TechBlog
-```
+You can mix models per agent by editing the `llm:` field in each crew's `config/agents.yaml`.
 
 ## Database Schema
 
-Topics are stored in SQLite with the following fields:
-- `id`: Unique identifier
-- `title`: Topic name
-- `summary`: Brief description
-- `category`: AI/ML/DL/Agentic Systems/Emerging
-- `impact_score`: 1-10 score
-- `difficulty_estimate`: beginner/intermediate/expert
-- `sources`: JSON array of URLs
-- `discovered_at`: Timestamp
-- `status`: pending_selection/selected/in_progress/completed
+Topics are stored in SQLite (`data/topics.db`):
 
-## Customization
-
-### Adding New Search Sources
-
-Edit `src/content_creator/tools/search_tools.py` to add new research tools:
-
-```python
-@tool("Search new source")
-def search_new_source(query: str) -> str:
-    # Implementation
-    pass
-```
-
-### Modifying Article Structure
-
-Edit `src/content_creator/crews/article_crew/config/tasks.yaml` to customize:
-- Article sections
-- Skill-level requirements
-- Project complexity
-
-### LinkedIn Post Styles
-
-Edit `src/content_creator/crews/publish_crew/config/tasks.yaml` to:
-- Add more post variations
-- Change tone guidelines
-- Modify hashtag strategies
-
-## Environment Variables
-
-Create a `.env` file with:
-
-```
-OPENAI_API_KEY=your_openai_key_here
-MODEL=gpt-4o  # or gpt-4o-mini for cost savings
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| id | TEXT | Unique identifier (YYYYMMDD_NN) |
+| title | TEXT | Topic name |
+| summary | TEXT | Brief description |
+| category | TEXT | AI/ML/DL/Agentic Systems/Emerging |
+| impact_score | REAL | 1-10 score |
+| difficulty_estimate | TEXT | beginner/intermediate/expert |
+| sources | TEXT | JSON array of URLs |
+| discovered_at | TEXT | ISO timestamp |
+| status | TEXT | pending_selection/selected/in_progress/completed |
 
 ## Troubleshooting
+
+**Ollama not responding:**
+```bash
+# Make sure Ollama is running
+ollama serve
+```
+
+**Model not found:**
+```bash
+ollama pull llama3.1:8b
+ollama pull qwen2.5-coder:7b
+```
+
+**Out of memory:**
+- Close other applications using GPU memory
+- Try smaller quantized models: `ollama pull llama3.1:8b-q4_0`
 
 **Module not found errors:**
 ```bash
@@ -257,21 +212,6 @@ pip install -e .
 rm -f data/topics.db  # Reset database
 ```
 
-**API rate limits:**
-- The tool includes rate limiting
-- Consider using GPT-4o-mini for development
-- Add delays between research calls if needed
-
-## Requirements
-
-- Python >=3.10, <3.14
-- OpenAI API key
-- Internet connection (for research tools)
-
 ## License
 
-MIT License - Feel free to modify and distribute.
-
-## Acknowledgments
-
-Built with [CrewAI](https://crewai.com) - a framework for orchestrating autonomous AI agents.
+MIT License

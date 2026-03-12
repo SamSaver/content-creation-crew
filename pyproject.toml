@@ -7,6 +7,7 @@ requires-python = ">=3.10,<3.14"
 dependencies = [
     "crewai[litellm,tools]>=0.86.0",
     "pydantic>=2.0.0",
+    "duckduckgo-search>=7.0.0",
 ]
 
 [project.scripts]
@@ -18,6 +19,7 @@ create-article = "content_creator.main:create_article"
 review = "content_creator.main:review_article"
 publish = "content_creator.main:publish_article"
 full-workflow = "content_creator.main:full_workflow"
+add-topic = "content_creator.main:add_custom_topic"
 
 [build-system]
 requires = ["hatchling"]

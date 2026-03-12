@@ -1,6 +1,6 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
-from content_creator.tools import search_topic_info
+from content_creator.tools import search_topic_info, read_web_content
 
 
 @CrewBase
@@ -14,7 +14,7 @@ class ArticleCrew:
     def research_specialist(self) -> Agent:
         return Agent(
             config=self.agents_config['research_specialist'],
-            tools=[search_topic_info],
+            tools=[search_topic_info, read_web_content],
             verbose=True
         )
 
