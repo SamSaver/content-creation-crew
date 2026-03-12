@@ -5,31 +5,34 @@ deep_research:
     Target Skill Level: {skill_level}
 
     Steps:
-    1. Use "Search for specific topic information" tool to find tutorials and articles about {topic_title}
-    2. Use "Read web page content" tool to read the full content of the most relevant URLs
-    3. Gather comprehensive information including:
-       - Core concepts and definitions
-       - Key research papers and breakthroughs
-       - Real-world applications and use cases
-       - Code implementations and examples
-       - Common misconceptions to avoid
+    1. Call "search_topic_info" with the topic name to find tutorials and practical guides about {topic_title}
+    2. Call "read_webpage" with the best URLs from step 1 to read the full content of relevant pages
+    3. Gather comprehensive PRACTICAL information including:
+       - Official documentation and getting started guides
+       - Practical tutorials and how-to articles
+       - Real-world use cases and working code examples
+       - Installation steps and prerequisites (pip install commands, etc.)
+       - Common pitfalls and troubleshooting tips
 
-    Focus on depth appropriate for {skill_level} level while ensuring
-    foundational concepts are covered.
+    Focus on depth appropriate for {skill_level} level.
+    Prioritize HANDS-ON content over theoretical explanations.
   expected_output: >
     A structured research report with these exact sections:
 
     ## Core Concepts
     [Clear explanations of the main concepts]
 
-    ## Key Papers and Breakthroughs
-    [Important research with URLs]
+    ## Official Resources
+    [Official docs, getting started guides with URLs]
+
+    ## Tutorials Found
+    [Best tutorials with URLs and brief descriptions]
 
     ## Real-World Applications
-    [How this is used in industry]
+    [How this is used in industry with concrete examples]
 
     ## Code Examples Found
-    [Any code snippets or implementations discovered]
+    [Any code snippets, installation commands, or implementations discovered]
 
     ## Key Terminology
     [Term: Definition format for important terms]
@@ -101,11 +104,13 @@ write_article:
     ## Why It Matters
     [Real-world impact and applications. 150-200 words]
 
-    ## How It Works
-    [Technical explanation at {skill_level} level with code snippets. 300-400 words]
+    ## Step-by-Step Tutorial
+    [Technical walkthrough at {skill_level} level with code snippets. 300-400 words.
+     Include real pip install commands, imports, and runnable code blocks.]
 
-    ## Getting Started / Implementation
-    [Practical step-by-step guide with code. 200-300 words]
+    ## Build Something With It
+    [Practical hands-on guide: build a small working project. 200-300 words.
+     Every code block must be copy-paste runnable.]
 
     ## Key Takeaways
     [Bulleted list of 3-5 main points]

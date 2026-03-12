@@ -1,10 +1,10 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from content_creator.tools import (
-    search_arxiv,
     search_ai_news,
     search_github_trending,
     get_trending_ai_topics,
+    search_ai_tools_and_frameworks,
     save_topic
 )
 
@@ -21,10 +21,10 @@ class ResearchCrew:
         return Agent(
             config=self.agents_config['trend_scout'],
             tools=[
-                search_arxiv,
                 search_ai_news,
                 search_github_trending,
-                get_trending_ai_topics
+                get_trending_ai_topics,
+                search_ai_tools_and_frameworks
             ],
             verbose=True
         )

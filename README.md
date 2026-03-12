@@ -4,7 +4,7 @@ A CrewAI-powered workflow that researches trending AI/ML topics, generates Mediu
 
 ## Features
 
-- **Real-Time Research**: Discovers trending AI/ML topics from arXiv, DuckDuckGo news, and GitHub
+- **Real-Time Research**: Discovers trending AI/ML tools and frameworks from DuckDuckGo news and GitHub
 - **Custom Topics**: Provide your own topic via CLI instead of using auto-discovery
 - **Skill-Level Adaptation**: Generates articles for Beginner, Intermediate, or Expert audiences
 - **Complete Article Pipeline**: Research -> Outline -> Writing -> Editing -> Code Projects
@@ -53,11 +53,11 @@ No API keys or `.env` file needed - everything runs locally via Ollama.
 Run the complete pipeline with interactive checkpoints:
 
 ```bash
-crewai run full-workflow
+crewai run
 ```
 
 This will:
-1. Research and discover trending AI/ML topics
+1. Research and discover trending AI/ML tools and frameworks
 2. Present topics for you to select + choose skill level
 3. Generate a complete article with code project
 4. Pause for your review and approval
@@ -68,9 +68,9 @@ This will:
 Skip research and write about a topic of your choice:
 
 ```bash
-add-topic --title "RAG Pipelines with LangChain" --level intermediate
-add-topic --title "Fine-tuning LLMs" --summary "How to fine-tune open source LLMs on custom data" --level expert
-add-topic -t "Neural Networks for Beginners" -l beginner
+crewai run add-topic -- --title "RAG Pipelines with LangChain" --level intermediate
+crewai run add-topic -- --title "Fine-tuning LLMs" --summary "How to fine-tune open source LLMs on custom data" --level expert
+crewai run add-topic -- -t "Neural Networks for Beginners" -l beginner
 ```
 
 **Arguments:**
@@ -78,14 +78,18 @@ add-topic -t "Neural Networks for Beginners" -l beginner
 - `--summary` / `-s` (optional): Brief description (defaults to title)
 - `--level` / `-l` (optional): `beginner`, `intermediate`, or `expert` (default: intermediate)
 
+> **Note:** The `--` before the flags is needed to separate `crewai run` args from your command's args.
+
 ### Individual Commands
 
 ```bash
+crewai run                 # Run full workflow (default)
 crewai run research        # Discover new AI/ML topics
 crewai run select-topic    # Browse and select from discovered topics
 crewai run create-article  # Select topic + create article
 crewai run review          # Review and approve/reject articles
 crewai run publish         # Prepare articles for Medium + LinkedIn
+crewai run help            # Show all available commands
 ```
 
 ## Project Structure
@@ -100,7 +104,7 @@ content_creator/
 │   ├── flows/
 │   │   └── __init__.py         # Flow orchestration (ContentCreationFlow)
 │   ├── tools/
-│   │   ├── search_tools.py     # arXiv, DuckDuckGo, GitHub search
+│   │   ├── search_tools.py     # DuckDuckGo news, GitHub trending, framework search
 │   │   ├── web_tools.py        # Web content reader
 │   │   └── storage_tools.py    # Database operations
 │   ├── database/
@@ -116,7 +120,7 @@ content_creator/
 ### Phase 1: Research
 
 The **ResearchCrew** discovers trending topics using real search tools:
-- **Trend Scout**: Searches arXiv papers, AI news via DuckDuckGo, and GitHub trending repos
+- **Trend Scout**: Searches AI/ML news via DuckDuckGo, GitHub trending repos, and framework tutorials
 - **Impact Analyst**: Scores each topic on innovation, relevance, accessibility, and buzz
 - **Topic Curator**: Saves top 10-15 topics to the SQLite database
 

@@ -5,57 +5,13 @@ import json
 from crewai.tools import tool
 
 
-@tool("Search arXiv for papers")
-def search_arxiv(query: str, max_results: int = 5) -> str:
-    """
-    Search arXiv for papers related to AI/ML topics.
-
-    Args:
-        query: Search query string
-        max_results: Maximum number of results to return (default 5)
-
-    Returns:
-        JSON string containing paper titles, abstracts, authors, and URLs
-    """
-    try:
-        encoded_query = urllib.parse.quote(query)
-        url = f"http://export.arxiv.org/api/query?search_query=all:{encoded_query}&start=0&max_results={max_results}&sortBy=submittedDate&sortOrder=descending"
-
-        with urllib.request.urlopen(url, timeout=30) as response:
-            data = response.read().decode('utf-8')
-
-        import xml.etree.ElementTree as ET
-        root = ET.fromstring(data)
-
-        ns = {'atom': 'http://www.w3.org/2005/Atom'}
-
-        papers = []
-        for entry in root.findall('atom:entry', ns):
-            title = entry.find('atom:title', ns)
-            summary = entry.find('atom:summary', ns)
-            link = entry.find('atom:link[@rel="alternate"]', ns)
-            published = entry.find('atom:published', ns)
-
-            if title is not None and summary is not None:
-                papers.append({
-                    'title': title.text.strip().replace('\n', ' '),
-                    'summary': summary.text.strip()[:500] + '...' if len(summary.text) > 500 else summary.text.strip(),
-                    'url': link.get('href') if link is not None else '',
-                    'published': published.text[:10] if published is not None else ''
-                })
-
-        return json.dumps(papers, indent=2)
-    except Exception as e:
-        return json.dumps({"error": f"Failed to search arXiv: {str(e)}"})
-
-
-@tool("Search AI news and blogs")
+@tool("search_ai_news")
 def search_ai_news(query: str) -> str:
     """
-    Search for AI news and blog posts using DuckDuckGo.
+    Search for AI news, blog posts, and announcements using DuckDuckGo.
 
     Args:
-        query: Search query string
+        query: Search query string (e.g., "LangChain new features", "AI agent framework")
 
     Returns:
         JSON string containing search results with title, URL, and snippet
@@ -82,26 +38,24 @@ def search_ai_news(query: str) -> str:
         return json.dumps({"error": f"Failed to search: {str(e)}", "results": []})
 
 
-@tool("Get GitHub trending repositories")
-def search_github_trending(language: str = "python", period: str = "daily") -> str:
+@tool("search_github_trending")
+def search_github_trending(query: str) -> str:
     """
-    Get trending GitHub repositories related to AI/ML using the GitHub Search API.
+    Search for popular recent GitHub repositories related to AI/ML tools and frameworks.
 
     Args:
-        language: Programming language filter (default: python)
-        period: Time period - daily, weekly, or monthly (default: daily)
+        query: Search query string (e.g., "AI agent", "LLM framework", "RAG")
 
     Returns:
-        JSON string containing trending repositories with name, description, stars, and URL
+        JSON string containing repositories with name, description, stars, and URL
     """
     try:
         from datetime import datetime, timedelta
 
-        days_map = {"daily": 1, "weekly": 7, "monthly": 30}
-        days = days_map.get(period, 7)
-        since_date = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
+        since_date = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
 
-        url = f"https://api.github.com/search/repositories?q=language:{language}+topic:machine-learning+created:>{since_date}&sort=stars&order=desc&per_page=10"
+        encoded_query = urllib.parse.quote(f"{query} AI ML")
+        url = f"https://api.github.com/search/repositories?q={encoded_query}+language:python+created:>{since_date}&sort=stars&order=desc&per_page=10"
         headers = {
             'Accept': 'application/vnd.github.v3+json',
             'User-Agent': 'AI-Content-Creator/1.0'
@@ -118,7 +72,7 @@ def search_github_trending(language: str = "python", period: str = "daily") -> s
                 'url': item.get('html_url', ''),
                 'description': item.get('description', 'No description') or 'No description',
                 'stars': item.get('stargazers_count', 0),
-                'language': item.get('language', language),
+                'language': item.get('language', 'python'),
                 'topics': item.get('topics', [])[:5]
             })
 
@@ -127,13 +81,13 @@ def search_github_trending(language: str = "python", period: str = "daily") -> s
         return json.dumps({"error": f"Failed to get trending repos: {str(e)}"})
 
 
-@tool("Search for specific topic information")
+@tool("search_topic_info")
 def search_topic_info(topic: str) -> str:
     """
-    Search for detailed information about a specific AI/ML topic.
+    Search for tutorials, guides, and practical information about a specific AI/ML topic.
 
     Args:
-        topic: Topic to search for
+        topic: Topic to search for (e.g., "LangChain RAG tutorial", "CrewAI agents")
 
     Returns:
         String containing search results with titles, snippets, and URLs
@@ -142,7 +96,7 @@ def search_topic_info(topic: str) -> str:
         from duckduckgo_search import DDGS
 
         results = DDGS().text(
-            keywords=f"{topic} tutorial explanation machine learning",
+            keywords=f"{topic} tutorial guide how to use",
             max_results=8
         )
 
@@ -159,13 +113,14 @@ def search_topic_info(topic: str) -> str:
         return f"Error searching for topic: {str(e)}"
 
 
-@tool("Get current trending AI topics")
+@tool("search_trending_topics")
 def get_trending_ai_topics() -> str:
     """
-    Get a list of currently trending AI/ML topics by searching real-time news and web sources.
+    Find currently trending AI/ML tools, frameworks, and practical topics from news and web sources.
+    Takes no arguments.
 
     Returns:
-        JSON string with trending topics, their categories, and source URLs
+        JSON string with trending topics including name, category, URL, and snippet
     """
     try:
         from duckduckgo_search import DDGS
@@ -173,9 +128,9 @@ def get_trending_ai_topics() -> str:
         trending = []
         seen_titles = set()
 
-        # Search recent AI/ML news
+        # Search for new AI tools and framework news
         news_results = DDGS().news(
-            keywords="artificial intelligence machine learning breakthrough",
+            keywords="new AI tools frameworks release tutorial",
             max_results=15
         )
         for r in news_results:
@@ -190,9 +145,9 @@ def get_trending_ai_topics() -> str:
                     'source': r.get('source', 'News')
                 })
 
-        # Also search for trending topics
+        # Search for trending frameworks and tools
         text_results = DDGS().text(
-            keywords="trending AI ML topics tools 2025 2026",
+            keywords="trending AI ML frameworks tools LangChain CrewAI new release 2026",
             max_results=10
         )
         for r in text_results:
@@ -212,11 +167,44 @@ def get_trending_ai_topics() -> str:
 
         # Minimal fallback only if all searches fail
         fallback = [
-            {"name": "Large Language Models (LLMs)", "category": "AI/ML", "url": "", "snippet": "Fallback: live search unavailable", "source": "static_fallback"},
-            {"name": "Retrieval-Augmented Generation (RAG)", "category": "AI/ML", "url": "", "snippet": "Fallback: live search unavailable", "source": "static_fallback"},
-            {"name": "Agentic AI Systems", "category": "Agentic Systems", "url": "", "snippet": "Fallback: live search unavailable", "source": "static_fallback"},
+            {"name": "Building RAG Pipelines with LangChain", "category": "AI/ML", "url": "", "snippet": "Fallback: live search unavailable", "source": "static_fallback"},
+            {"name": "Multi-Agent Systems with CrewAI", "category": "Agentic Systems", "url": "", "snippet": "Fallback: live search unavailable", "source": "static_fallback"},
+            {"name": "Local LLMs with Ollama", "category": "AI/ML", "url": "", "snippet": "Fallback: live search unavailable", "source": "static_fallback"},
         ]
         return json.dumps(fallback, indent=2)
 
     except Exception as e:
         return json.dumps({"error": f"Failed to get trending topics: {str(e)}"})
+
+
+@tool("search_ai_tools_and_frameworks")
+def search_ai_tools_and_frameworks(query: str) -> str:
+    """
+    Search specifically for AI/ML framework tutorials, tool guides, and how-to articles.
+
+    Args:
+        query: Search query (e.g., "LangChain", "AI agent framework", "RAG tutorial")
+
+    Returns:
+        JSON string containing tutorials and guides with title, URL, and snippet
+    """
+    try:
+        from duckduckgo_search import DDGS
+
+        results = DDGS().text(
+            keywords=f"{query} tutorial framework guide how to build",
+            max_results=10
+        )
+
+        formatted = []
+        for r in results:
+            formatted.append({
+                'title': r.get('title', ''),
+                'url': r.get('href', ''),
+                'snippet': r.get('body', ''),
+                'source': 'Tutorial Search'
+            })
+
+        return json.dumps(formatted, indent=2)
+    except Exception as e:
+        return json.dumps({"error": f"Failed to search tools/frameworks: {str(e)}", "results": []})

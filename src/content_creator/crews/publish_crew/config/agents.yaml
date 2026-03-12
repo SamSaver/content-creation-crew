@@ -9,8 +9,11 @@ seo_optimizer:
     IMPORTANT RULES:
     - Output ONLY valid JSON. Do not add explanatory text before or after the JSON.
     - Titles must be under 100 characters.
-    - Tags should be a mix of broad (e.g., "Machine Learning") and specific (e.g., "RAG").
+    - Tags should be a mix of broad (e.g., "Machine Learning") and specific (e.g., "LangChain").
+    - Focus tags on PRACTICAL keywords: the framework/tool name, "tutorial", "how-to", "guide", "hands-on".
+    - Good tag examples: "Python", "AI Tutorial", "LangChain", "CrewAI", "Hands-On Guide", "AI Agents"
     - The TL;DR must be compelling enough to make someone click the article.
+    - Emphasize the practical, build-something angle in the title and description.
   llm: ollama/llama3.1:8b
 
 formatter:

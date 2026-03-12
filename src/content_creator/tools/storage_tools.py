@@ -8,7 +8,7 @@ import json
 db = TopicDatabase()
 
 
-@tool("Save topic to database")
+@tool("save_topic")
 def save_topic(
     topic_id: str,
     title: str,
@@ -56,7 +56,7 @@ def save_topic(
         return f"Error saving topic: {str(e)}"
 
 
-@tool("Get pending topics")
+@tool("get_pending_topics")
 def get_pending_topics(limit: int = 15) -> str:
     """
     Get topics waiting for user selection.
@@ -74,7 +74,7 @@ def get_pending_topics(limit: int = 15) -> str:
         return json.dumps({"error": str(e)})
 
 
-@tool("Get topic by ID")
+@tool("get_topic_by_id")
 def get_topic_by_id(topic_id: str) -> str:
     """
     Get a specific topic by its ID.
@@ -95,7 +95,7 @@ def get_topic_by_id(topic_id: str) -> str:
         return json.dumps({"error": str(e)})
 
 
-@tool("Update topic status")
+@tool("update_topic_status")
 def update_topic_status(topic_id: str, status: str) -> str:
     """
     Update the status of a topic.
@@ -116,7 +116,7 @@ def update_topic_status(topic_id: str, status: str) -> str:
         return f"Error updating topic: {str(e)}"
 
 
-@tool("Get all topics")
+@tool("get_all_topics")
 def get_all_topics() -> str:
     """
     Get all topics from the database.

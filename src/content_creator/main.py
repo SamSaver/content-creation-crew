@@ -327,55 +327,85 @@ def add_custom_topic():
         print("\n\nWorkflow interrupted. Progress has been saved.")
 
 
+def show_help():
+    """Show available commands"""
+    print_header("AI CONTENT CREATOR")
+    print("A CrewAI workflow for researching AI topics and creating Medium articles.\n")
+    print("Usage: crewai run <command>")
+    print("\nCommands:")
+    print("  research         - Discover new AI/ML topics")
+    print("  select-topic     - Browse and select a topic")
+    print("  create-article   - Create article from selected topic")
+    print("  review           - Review pending articles")
+    print("  publish          - Prepare approved articles for Medium")
+    print("  full-workflow    - Run complete workflow with checkpoints")
+    print("  add-topic        - Create article from custom topic")
+    print()
+    print("Examples:")
+    print("  crewai run                                              # runs full workflow")
+    print("  crewai run research                                     # discover topics")
+    print('  crewai run add-topic -- --title "RAG Pipelines" --level intermediate')
+    print()
+
+
+COMMANDS = {
+    'research': run_research,
+    'select-topic': display_topics_and_select,
+    'create-article': lambda: create_article(*display_topics_and_select()),
+    'review': review_article,
+    'publish': publish_article,
+    'full-workflow': full_workflow,
+    'kickoff': full_workflow,
+    'add-topic': add_custom_topic,
+    'help': show_help,
+}
+
+
 def main():
-    """Main entry point"""
-    if len(sys.argv) < 2:
-        print_header("AI CONTENT CREATOR")
-        print("A CrewAI workflow for researching AI topics and creating Medium articles.\n")
-        print("Usage: crewai run <command>")
-        print("\nCommands:")
-        print("  research         - Discover new AI/ML topics")
-        print("  select-topic     - Browse and select a topic")
-        print("  create-article   - Create article from selected topic")
-        print("  review           - Review pending articles")
-        print("  publish          - Prepare approved articles for Medium")
-        print("  full-workflow    - Run complete workflow with checkpoints")
-        print("  add-topic        - Create article from custom topic")
-        print()
-        print("Custom topic example:")
-        print('  add-topic --title "RAG Pipelines" --level intermediate')
+    """Main entry point — dispatches to the right command.
+
+    Works both as:
+      - `crewai run <command>` (CrewAI invokes the kickoff entry point with args)
+      - `python -m content_creator.main <command>` (direct invocation)
+    """
+    # Find the command: skip any leading args that aren't a known command
+    # This handles both `kickoff research` (crewai run) and `main.py research` (direct)
+    command = None
+    command_idx = None
+    for i, arg in enumerate(sys.argv[1:], start=1):
+        if arg in COMMANDS:
+            command = arg
+            command_idx = i
+            break
+
+    if command is None:
+        # No recognized command — default to full workflow
+        full_workflow()
         return
 
-    command = sys.argv[1]
+    # Shift sys.argv so the command's function sees its own args correctly
+    # e.g., for add-topic: sys.argv becomes [script, --title, "X", --level, "Y"]
+    sys.argv = [sys.argv[0]] + sys.argv[command_idx + 1:]
 
-    commands = {
-        'research': run_research,
-        'select-topic': display_topics_and_select,
-        'create-article': lambda: create_article(*display_topics_and_select()),
-        'review': review_article,
-        'publish': publish_article,
-        'full-workflow': full_workflow,
-        'kickoff': full_workflow,
-        'add-topic': add_custom_topic,
-    }
-
-    if command in commands:
-        try:
-            commands[command]()
-        except KeyboardInterrupt:
-            print("\n\nWorkflow interrupted. Progress has been saved.")
-        except Exception as e:
-            print(f"\nError: {e}")
-            import traceback
-            traceback.print_exc()
-    else:
-        print(f"Unknown command: {command}")
-        print("Run without arguments to see available commands.")
+    try:
+        COMMANDS[command]()
+    except KeyboardInterrupt:
+        print("\n\nWorkflow interrupted. Progress has been saved.")
+    except Exception as e:
+        print(f"\nError: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def kickoff():
-    """Entry point for 'kickoff' command"""
-    full_workflow()
+    """Entry point for 'crewai run' — routes through main() so subcommands work.
+
+    Examples:
+        crewai run               → full_workflow (default)
+        crewai run research      → run_research
+        crewai run add-topic ... → add_custom_topic
+    """
+    main()
 
 
 def plot():

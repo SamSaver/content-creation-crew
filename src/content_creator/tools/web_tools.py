@@ -3,7 +3,7 @@ import re
 from crewai.tools import tool
 
 
-@tool("Read web page content")
+@tool("read_webpage")
 def read_web_content(url: str) -> str:
     """
     Fetch and extract readable text content from a web page URL.

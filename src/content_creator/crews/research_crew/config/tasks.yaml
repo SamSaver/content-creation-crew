@@ -1,21 +1,22 @@
 discover_topics:
   description: >
-    Search for the latest trending AI/ML topics across multiple sources.
+    Search for the latest trending AI/ML tools, frameworks, and practical topics.
     You MUST use your search tools - do NOT make up topics from memory.
 
     Steps:
-    1. Call "Search arXiv for papers" with queries like "large language models", "machine learning", "deep learning"
-    2. Call "Get current trending AI topics" to get real-time trending topics
-    3. Call "Get GitHub trending repositories" to find popular ML projects
-    4. Call "Search AI news and blogs" with queries like "AI breakthrough", "ML new research"
+    1. Call "search_trending_topics" to find what AI/ML topics are trending now
+    2. Call "search_ai_news" with query="new AI framework ML tool release"
+    3. Call "search_ai_tools_and_frameworks" with query="LangChain CrewAI AI agent framework"
+    4. Call "search_github_trending" with query="AI ML framework tool"
 
-    Look for topics that are:
-    - Recently published or gaining attention
-    - High-impact and potentially transformative
-    - Have educational value for different skill levels
-    - Cover diverse areas: AI, ML, DL, Agentic Systems, Emerging subfields
+    Focus on PRACTICAL topics people can learn and build with:
+    - New AI/ML frameworks and libraries (LangChain, CrewAI, Ollama, HuggingFace, etc.)
+    - How-to guides for building with AI tools
+    - Multi-tool workflows and integrations
+    - New product releases and their practical usage
 
-    Aim to discover 10-15 unique topics.
+    Do NOT focus on research papers or academic topics.
+    Aim to discover 10-15 unique practical topics.
   expected_output: >
     Return ONLY a JSON array. Each element MUST have exactly these fields:
     [{"title": "Topic Name", "summary": "2-3 sentences describing the topic", "category": "one of [AI, ML, DL, Agentic Systems, Emerging]", "sources": ["url1", "url2"]}]
@@ -25,14 +26,15 @@ discover_topics:
 analyze_impact:
   description: >
     Analyze EVERY topic from the previous step. Score each on these criteria:
-    1. Innovation Factor (1-10): How novel/groundbreaking is this?
-    2. Practical Relevance (1-10): How applicable is this in real-world scenarios?
-    3. Beginner Accessibility (1-10): Can beginners understand the basics?
+    1. Innovation Factor (1-10): How novel/groundbreaking is this tool or framework?
+    2. Practical Relevance (1-10): How useful is this for developers building real projects?
+    3. Beginner Accessibility (1-10): Can beginners follow a tutorial about this?
     4. Current Buzz (1-10): How much attention is this getting right now?
 
     Calculate an overall Impact Score as the average of all four factors.
     Estimate the difficulty level (beginner/intermediate/expert).
 
+    Prioritize topics that lend themselves to hands-on tutorials with working code.
     You MUST score ALL topics. Do not skip any.
   expected_output: >
     For EACH topic, output EXACTLY this format:
@@ -56,22 +58,22 @@ analyze_impact:
 curate_findings:
   description: >
     Take the top 10-15 topics sorted by their Overall impact score.
-    For each topic, create a compelling 2-3 sentence summary that would make someone
-    want to read an article about it.
+    For each topic, create a compelling 2-3 sentence summary that makes a developer
+    want to read a hands-on tutorial about it.
 
-    Then you MUST call the save_topic tool for EACH topic. Each call needs ALL these parameters:
+    Then you MUST call the "save_topic" tool for EACH topic. Each call needs ALL these parameters:
     - topic_id: Use format "YYYYMMDD_NN" (e.g., "20260312_01", "20260312_02", etc.)
     - title: The topic title (clean, formatted)
     - summary: Your compelling 2-3 sentence summary
     - category: One of "AI", "ML", "DL", "Agentic Systems", "Emerging"
     - impact_score: The overall score (a number like 8.5)
     - difficulty_estimate: "beginner", "intermediate", or "expert"
-    - sources: A JSON string array, e.g., '["https://arxiv.org/abs/...", "https://..."]'
+    - sources: A JSON string array, e.g., '["https://example.com/article", "https://github.com/..."]'
     - discovered_at: Current date in ISO format, e.g., "2026-03-12T10:00:00"
 
     Ensure diversity across categories - do not save all topics from one area.
   expected_output: >
-    Confirmation that you called save_topic for each topic.
+    Confirmation that you called "save_topic" for each topic.
     Then list the top 5 topics with their titles and scores.
   agent: topic_curator
   context:
