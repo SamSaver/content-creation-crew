@@ -1,0 +1,94 @@
+optimize_metadata:
+  description: >
+    Create SEO-optimized metadata for the article: {article_title}
+
+    Generate:
+    1. Three title options:
+       - Catchy/clickable version
+       - Descriptive/technical version
+       - SEO-focused version with keywords
+
+    2. 5-7 relevant tags for Medium (mix of broad and specific)
+
+    3. TL;DR (2-3 sentence summary) for the article preview
+
+    4. Featured image description/prompt for DALL-E or Midjourney
+
+    5. Estimated reading time
+
+    Ensure titles are under 100 characters and the TL;DR is compelling.
+  expected_output: >
+    JSON with: title_options (array), tags (array), tldr (string),
+    featured_image_prompt (string), reading_time (int)
+  agent: seo_optimizer
+
+format_for_medium:
+  description: >
+    Format the article for Medium publication.
+
+    Current article: {article_content}
+
+    Requirements:
+    1. Convert to Medium-compatible markdown
+    2. Ensure proper heading hierarchy (H1 for title, H2 for sections)
+    3. Format code blocks with language tags
+    4. Add table of contents if article is long
+    5. Ensure all links are properly formatted
+    6. Add "TL;DR" section at the beginning if not present
+    7. Add "Further Reading" section at the end
+    8. Include article metadata as comments at the top
+
+    Also create:
+    - Import instructions for Medium
+    - Checklist of things to verify before publishing
+  expected_output: >
+    Complete formatted article ready for Medium import,
+    import instructions, and pre-publish checklist
+  agent: formatter
+
+create_linkedin_content:
+  description: >
+    Create LinkedIn post content to promote the article: {article_title}
+
+    Article Summary: {article_summary}
+    Skill Level: {skill_level}
+    Category: {category}
+
+    Generate 3 LinkedIn post variations:
+
+    1. HOOK-FOCUSED: Attention-grabbing opening with clear value proposition
+       - Strong hook in first 2 lines
+       - Brief insight from article
+       - Clear CTA to read
+       - Relevant hashtags
+
+    2. STORY-FOCUSED: Personal angle sharing the learning journey
+       - Why this topic matters to you
+       - What you learned writing about it
+       - Invitation to learn together
+       - Relevant hashtags
+
+    3. QUESTION-FOCUSED: Thought-provoking question to spark discussion
+       - Compelling question related to topic
+       - Brief context from article
+       - Ask for opinions/experiences
+       - Relevant hashtags
+
+    Each post should:
+    - Be 150-300 words
+    - Include 3-5 targeted hashtags
+    - Suggest emojis for visual appeal
+    - Have the Medium link placeholder [LINK]
+    - Match the {skill_level} tone
+
+    Also suggest:
+    - Best time to post
+    - Whether to include an image
+    - Follow-up comment ideas
+  expected_output: >
+    Three complete LinkedIn post variations with:
+    - Full post text ready to copy
+    - Suggested emojis
+    - Recommended hashtags
+    - Posting tips for each variation
+  agent: linkedin_creator

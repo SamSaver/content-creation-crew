@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /home/samarth/learning/frameworks/crewai/content_creator -type f -name \"*.py\" -o -name \"*.yaml\" -o -name \"*.toml\" -o -name \"*.md\" 2>/dev/null | head -30)",
+      "Bash(python -c \"import content_creator.main\" 2>&1 || echo \"Import check complete\")",
+      "Bash(tree -L 4 -I '__pycache__|*.pyc|.git' /home/samarth/learning/frameworks/crewai/content_creator 2>/dev/null || find /home/samarth/learning/frameworks/crewai/content_creator -type f -name \"*.py\" -o -name \"*.yaml\" -o -name \"*.md\" | head -50)"
+    ]
+  }
+}

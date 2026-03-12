@@ -1,0 +1,66 @@
+discover_topics:
+  description: >
+    Search for the latest trending AI/ML topics across multiple sources.
+    Use the available search tools to find:
+    1. Recent papers on arXiv related to AI, ML, Deep Learning, and Agentic Systems
+    2. Currently trending AI topics
+    3. Popular GitHub repositories in ML
+
+    Look for topics that are:
+    - Recently published or gaining attention
+    - High-impact and potentially transformative
+    - Educational value for different skill levels
+    - Covering diverse areas: AI, ML, DL, Agentic Systems, Emerging subfields
+
+    Aim to discover 10-15 unique topics.
+  expected_output: >
+    A JSON array of discovered topics, each containing:
+    - title: The topic name
+    - summary: Brief description (2-3 sentences)
+    - category: One of [AI, ML, DL, Agentic Systems, Emerging]
+    - sources: List of relevant URLs
+  agent: trend_scout
+
+analyze_impact:
+  description: >
+    Analyze each discovered topic and score it on the following criteria:
+    1. Innovation Factor (1-10): How novel/groundbreaking is this?
+    2. Practical Relevance (1-10): How applicable is this in real-world scenarios?
+    3. Beginner Accessibility (1-10): Can beginners understand the basics?
+    4. Current Buzz (1-10): How much attention is this getting right now?
+
+    Also estimate the difficulty level (beginner/intermediate/expert) based on
+    the technical complexity of the topic.
+
+    Calculate an overall Impact Score as the average of all factors.
+  expected_output: >
+    For each topic, provide:
+    - impact_scores for each criterion
+    - overall_impact_score (average)
+    - difficulty_estimate (beginner/intermediate/expert)
+    - brief justification for scores
+  agent: impact_analyst
+  context:
+    - discover_topics
+
+curate_findings:
+  description: >
+    Compile the top 10-15 topics based on impact scores.
+    Create compelling summaries that would make someone want to read an article about each topic.
+    Ensure diversity across categories (not all from one area).
+
+    Save each topic to the database with:
+    - A unique ID (use timestamp + index)
+    - Formatted title
+    - Compelling 2-3 sentence summary
+    - Category tag
+    - Impact score
+    - Difficulty estimate
+    - Source URLs
+    - Current timestamp
+  expected_output: >
+    Confirmation that topics have been saved to the database.
+    A summary of the top 5 topics with their scores.
+  agent: topic_curator
+  context:
+    - analyze_impact

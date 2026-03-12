@@ -1,0 +1,148 @@
+deep_research:
+  description: >
+    Conduct deep research on the selected topic: {topic_title}
+    Topic Summary: {topic_summary}
+    Target Skill Level: {skill_level}
+
+    Gather comprehensive information including:
+    1. Core concepts and definitions
+    2. Key research papers and breakthroughs
+    3. Real-world applications and use cases
+    4. Available tutorials and learning resources
+    5. Code implementations and examples
+    6. Common misconceptions to avoid
+
+    Focus on depth appropriate for {skill_level} level while ensuring
+    foundational concepts are covered.
+  expected_output: >
+    A comprehensive research report covering:
+    - Core concepts explained clearly
+    - Key papers/breakthroughs with URLs
+    - Real-world applications
+    - Learning resources
+    - Code examples found
+    - Key terminology with definitions
+  agent: research_specialist
+
+create_outline:
+  description: >
+    Create a detailed article outline for: {topic_title}
+    Skill Level: {skill_level}
+
+    Structure the article based on skill level:
+
+    BEGINNER Structure:
+    - Hook: Relatable real-world analogy
+    - What is it? (Simple explanation, no jargon)
+    - Why should you care? (Personal/professional benefits)
+    - How it works (High-level, intuitive)
+    - Getting started (Tools, first steps)
+    - Mini-project: Copy-paste runnable example
+    - Resources to learn more
+
+    INTERMEDIATE Structure:
+    - Hook: Technical problem it solves
+    - Concept explanation (with technical depth)
+    - Why it matters (Industry applications)
+    - Core fundamentals (Key algorithms/mechanisms)
+    - Step-by-step implementation guide
+    - Mini-project: Extensible code example
+    - Common pitfalls and best practices
+    - Resources and next steps
+
+    EXPERT Structure:
+    - Hook: Cutting-edge research angle
+    - Deep technical dive (architecture, mathematics)
+    - State-of-the-art performance analysis
+    - Implementation details and optimizations
+    - Advanced techniques and variants
+    - Mini-project: Production-ready implementation
+    - Open research questions and opportunities
+    - Citations and further reading
+
+    Include specific bullet points under each section.
+  expected_output: >
+    A detailed outline with all section headers and bullet points
+    for content to be included in each section.
+  agent: content_planner
+  context:
+    - deep_research
+
+write_article:
+  description: >
+    Write the complete Medium-style article for: {topic_title}
+    Skill Level: {skill_level}
+
+    Follow the outline provided and write engaging content:
+    - Use a conversational but informative tone
+    - Include relevant examples and analogies
+    - Add code blocks with clear explanations
+    - Use markdown formatting (headers, lists, bold, etc.)
+    - Aim for 1500-2500 words depending on skill level
+    - Make sure each section flows logically
+    - End with actionable takeaways
+
+    The article should feel like a high-quality Medium post that
+    readers would want to bookmark and share.
+  expected_output: >
+    A complete markdown-formatted article with:
+    - Title
+    - All sections from outline
+    - Code examples
+    - Links to resources
+    - Proper formatting
+  agent: writer
+  context:
+    - create_outline
+
+edit_article:
+  description: >
+    Review and edit the article for: {topic_title}
+    Skill Level: {skill_level}
+
+    Check for:
+    1. Technical accuracy - verify facts and concepts
+    2. Clarity - ensure explanations are clear
+    3. Flow - check transitions between sections
+    4. Style - ensure Medium-appropriate tone
+    5. Reading level - appropriate for {skill_level}
+    6. Grammar and spelling
+
+    Make necessary improvements while preserving the author's voice.
+    Add suggestions if sections need expansion.
+  expected_output: >
+    The polished article with improvements made.
+    A brief summary of changes made.
+  agent: editor
+  context:
+    - write_article
+
+create_project:
+  description: >
+    Create a practical mini-project for: {topic_title}
+    Skill Level: {skill_level}
+
+    Requirements:
+    - BEGINNER: Complete working example (~50 lines), copy-paste ready
+    - INTERMEDIATE: Extensible template with exercises (~100-150 lines)
+    - EXPERT: Full implementation with tests and documentation (~200+ lines)
+
+    Include:
+    1. Project description and goals
+    2. Required dependencies (requirements.txt format)
+    3. Step-by-step implementation
+    4. Well-commented code
+    5. Instructions to run
+    6. Expected output
+    7. Extension ideas
+
+    The project should reinforce key concepts from the article.
+  expected_output: >
+    A complete project including:
+    - README section describing the project
+    - Python code file(s)
+    - requirements.txt content
+    - Step-by-step instructions
+  agent: code_specialist
+  context:
+    - edit_article
